@@ -1,5 +1,3 @@
-Option Explicit
-
 Sub FormatDetailTimeSheet()
 
     Dim numCols As Integer 'nº columnas
@@ -67,8 +65,9 @@ Sub FormatDetailTimeSheet()
         
         Application.ScreenUpdating = False
 
-        Set ws = ThisWorkbook.Sheets("Sheet1")
-
+        ' Set ws = ThisWorkbook.Sheets("Hoja1")
+        Set ws = ActiveSheet
+        
         ' Encontrar la última fila en la columna "Hora ent"
         LastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
 
@@ -82,6 +81,7 @@ Sub FormatDetailTimeSheet()
             Cells(iSep, "D").Value = Format(Cells(iSep, 3), "hh:mm:ss")
         Next iSep
 
+        Dim LastRowH As Long
         
         LastRowH = ws.Cells(ws.Rows.Count, "H").End(xlUp).Row
         
@@ -105,8 +105,9 @@ Sub FormatDetailTimeSheet()
         Next i
 
     ' Calculo horas trabajadas
-        Set ws = ThisWorkbook.Sheets("Sheet1")
-
+        ' Set ws = ThisWorkbook.Sheets("Hoja1")
+        Set ws = ActiveSheet
+        
         ' Encontrar la última fila en la columna "Hora ent"
         LastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
 
@@ -143,20 +144,49 @@ Sub FormatDetailTimeSheet()
         Next Celda
         
         ' Horas extras
+       
+        ' Set Hoja = ThisWorkbook.Sheets("Hoja1") ' Cambia "Nombre de tu hoja" con el nombre de tu hoja
+        Set Hoja = ActiveSheet
         
+        UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
+         With ws
+            .Columns("J:J").Insert Shift:=xlToRight
+            .Cells(1, "J").Value = "Total horas extras"
+        End With
+        
+        Dim HoraLimite As Date
+        HoraLimite = TimeValue("08:00:00") ' Cambia "08:00:00" según tu hora límite
+        
+        
+        For i = 2 To UltimaFila ' Empezando desde la segunda fila (asumiendo que la fila 1 tiene encabezados)
+            Set CeldaI = Hoja.Cells(i, "I")
+            Set CeldaJ = Hoja.Cells(i, "J")
+            
+            If IsNumeric(CeldaI.Value) Then
+                Dim HoraReal As Date
+                HoraReal = TimeSerial(Hour(CeldaI.Value), Minute(CeldaI.Value), Second(CeldaI.Value))
+                
+                If HoraReal > HoraLimite Then
+                    Dim HorasExtras As Date
+                    HorasExtras = HoraReal - HoraLimite
+                    CeldaJ.Value = Format(HorasExtras, "hh:mm:ss")
+                Else
+                    CeldaJ.Value = "00:00:00"
+                    CeldaJ.Interior.Color = RGB(240, 128, 128) ' coral
+                    
+                End If
+            End If
+        Next i
     
         ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
-        ws.Columns("A:A").AutoFit
-        ws.Columns("B:B").AutoFit
-        ws.Columns("C:C").AutoFit
-        ws.Columns("D:D").AutoFit
-        ws.Columns("E:E").AutoFit
-        ws.Columns("F:F").AutoFit
-        ws.Columns("G:G").AutoFit
-        ws.Columns("H:H").AutoFit
-        ws.Columns("I:I").AutoFit
-        ws.Columns("J:J").AutoFit
+        ' ws.Columns("A:A").AutoFit
         
+        ' Autoajustar columnas
+        Hoja.Cells.EntireColumn.AutoFit
+
+        ' Autoajustar filas
+        Hoja.Cells.EntireRow.AutoFit
+            
 
     Application.ScreenUpdating = True
 End Sub
@@ -164,8 +194,10 @@ End Sub
 
 
 Sub CalcularHorasExtras()
+
     Dim Hoja As Worksheet
-    Set Hoja = ThisWorkbook.Sheets("Hoja2") ' Cambia "Nombre de tu hoja" con el nombre de tu hoja
+    ' Set Hoja = ThisWorkbook.Sheets("Hoja1") ' Cambia "Nombre de tu hoja" con el nombre de tu hoja
+    Set Hoja = ActiveSheet
     
     Dim UltimaFila As Long
     UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
