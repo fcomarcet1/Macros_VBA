@@ -226,3 +226,28 @@ Sub CalcularHorasExtras()
         End If
     Next i
 End Sub
+
+Sub EliminarFilasCondicionalmente()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Long
+    
+    ' Establece la hoja de trabajo en la que deseas trabajar (cambia "NombreDeTuHoja" al nombre real de tu hoja).
+    Set ws = ThisWorkbook.Sheets("NombreDeTuHoja")
+    
+    ' Encuentra la última fila con datos en la columna A.
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Itera a través de las filas desde abajo hacia arriba.
+    For i = LastRow To 1 Step -1
+        If (ws.Cells(i, 1).Value Like "*" & "Empleado :" & "*")  And (ws.Cells(i, 9).Value = "00:00:00") Then
+            ' Elimina la fila si cumple con la condición.
+            ws.Rows(i).Delete
+        End If
+    Next i
+End Sub
+
+
+
+
+
