@@ -1,3 +1,4 @@
+
 Sub FormatDetailTimeSheet()
 
     Dim numCols As Integer 'nº columnas
@@ -144,8 +145,7 @@ Sub FormatDetailTimeSheet()
         Next Celda
         
         ' Horas extras
-       
-        ' Set Hoja = ThisWorkbook.Sheets("Hoja1") ' Cambia "Nombre de tu hoja" con el nombre de tu hoja
+        ' Set Hoja = ThisWorkbook.Sheets("Hoja1")
         Set Hoja = ActiveSheet
         
         UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
@@ -158,7 +158,7 @@ Sub FormatDetailTimeSheet()
         HoraLimite = TimeValue("08:00:00") ' Cambia "08:00:00" según tu hora límite
         
         
-        For i = 2 To UltimaFila ' Empezando desde la segunda fila (asumiendo que la fila 1 tiene encabezados)
+        For i = 2 To UltimaFila
             Set CeldaI = Hoja.Cells(i, "I")
             Set CeldaJ = Hoja.Cells(i, "J")
             
@@ -172,11 +172,46 @@ Sub FormatDetailTimeSheet()
                     CeldaJ.Value = Format(HorasExtras, "hh:mm:ss")
                 Else
                     CeldaJ.Value = "00:00:00"
-                    CeldaJ.Interior.Color = RGB(240, 128, 128) ' coral
+                    ' CeldaJ.Interior.Color = RGB(240, 128, 128) ' coral
                     
                 End If
             End If
         Next i
+        
+        ' Eliminar valores 00:00:00 Col J si la columna A contiene "Empleado :" o "Firma Empleado"
+           For i = 2 To LastRow
+        
+            ' Convierte el valor en la celda a formato de tiempo (si es posible).
+            On Error Resume Next
+                Dim valorComoTiempo As Date
+                valorComoTiempo = CDate(ws.Cells(i, 9).Value)
+            On Error GoTo 0
+            
+            ' Verifica si el valor es igual a "00:00:00" en formato de tiempo.
+            ' If (valorComoTiempo = TimeValue("00:00:00")) And (InStr(1, ws.Cells(i, "A").Value, "Empleado :", vbTextCompare) > 0) Then
+                ' ws.Cells(i, "J").Value = ""
+            ' End If
+            
+            If (valorComoTiempo = TimeValue("00:00:00")) And ((ws.Cells(i, 1).Value Like "*Empleado :*") Or (ws.Cells(i, 1).Value Like "*Firma Empleado*")) Then
+                ws.Cells(i, "J").Value = ""
+            End If
+           Next i
+           
+        ' Añadir 2 filas debajo Firma Empleado
+            LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+            For i = 2 To LastRow
+                If ws.Cells(i, "A").Value Like "*Firma Empleado*" Then
+                    ws.Rows(i).Copy
+                    ws.Rows(i + 1).Resize(2).Insert Shift:=xlDown
+                    ws.Cells(i + 1, "A").Value = ""
+                    ws.Cells(i + 1, "E").Value = ""
+                    ws.Cells(i + 2, "A").Value = ""
+                    ws.Cells(i + 2, "E").Value = ""
+                    ws.Rows(i + 1).PasteSpecial Paste:=xlPasteFormats
+                 End If
+            Next i
+        
     
         ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
         ' ws.Columns("A:A").AutoFit
@@ -193,61 +228,70 @@ End Sub
 
 
 
-Sub CalcularHorasExtras()
 
-    Dim Hoja As Worksheet
-    ' Set Hoja = ThisWorkbook.Sheets("Hoja1") ' Cambia "Nombre de tu hoja" con el nombre de tu hoja
-    Set Hoja = ActiveSheet
-    
-    Dim UltimaFila As Long
-    UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
-    
-    Dim HoraLimite As Date
-    HoraLimite = TimeValue("08:00:00") ' Cambia "08:00:00" según tu hora límite
-    
-    Dim CeldaI As Range
-    Dim CeldaJ As Range
-    
-    For i = 2 To UltimaFila ' Empezando desde la segunda fila (asumiendo que la fila 1 tiene encabezados)
-        Set CeldaI = Hoja.Cells(i, "I")
-        Set CeldaJ = Hoja.Cells(i, "J")
-        
-        If IsNumeric(CeldaI.Value) Then
-            Dim HoraReal As Date
-            HoraReal = TimeSerial(Hour(CeldaI.Value), Minute(CeldaI.Value), Second(CeldaI.Value))
-            
-            If HoraReal > HoraLimite Then
-                Dim HorasExtras As Date
-                HorasExtras = HoraReal - HoraLimite
-                CeldaJ.Value = Format(HorasExtras, "hh:mm:ss")
-            Else
-                CeldaJ.Value = "00:00:00"
-            End If
-        End If
-    Next i
-End Sub
 
 Sub EliminarFilasCondicionalmente()
     Dim ws As Worksheet
     Dim LastRow As Long
     Dim i As Long
     
-    ' Establece la hoja de trabajo en la que deseas trabajar (cambia "NombreDeTuHoja" al nombre real de tu hoja).
-    Set ws = ThisWorkbook.Sheets("NombreDeTuHoja")
+    Set ws = ActiveSheet
     
-    ' Encuentra la última fila con datos en la columna A.
-    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    ' Encuentra la última fila con datos en la columna I.
+    LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row
     
-    ' Itera a través de las filas desde abajo hacia arriba.
-    For i = LastRow To 1 Step -1
-        If (ws.Cells(i, 1).Value Like "*" & "Empleado :" & "*")  And (ws.Cells(i, 9).Value = "00:00:00") Then
-            ' Elimina la fila si cumple con la condición.
-            ws.Rows(i).Delete
+     For i = 2 To LastRow
+     
+        ' Convierte el valor en la celda a formato de tiempo (si es posible).
+        On Error Resume Next
+            Dim valorComoTiempo As Date
+            valorComoTiempo = CDate(ws.Cells(i, 9).Value)
+        On Error GoTo 0
+        
+        ' Verifica si el valor es igual a "00:00:00" en formato de tiempo.
+        If (valorComoTiempo = TimeValue("00:00:00")) And (InStr(1, ws.Cells(i, "A").Value, "Empleado :", vbTextCompare) > 0) Then
+            ' Pone en blanco la celda si cumple con la condición.
+            ws.Cells(i, "J").Value = ""
         End If
+        
     Next i
 End Sub
 
+Sub ObtenerTipoDeDato()
+    Dim MiCelda As Range
+    Dim TipoDato As String
+    
+    ' Establece la celda de la que deseas conocer el tipo de dato (cambia "A1" por la celda que desees).
+    Set MiCelda = ThisWorkbook.Sheets("Hoja1").Range("J3")
+    
+    ' Obtén el tipo de dato de la celda.
+    TipoDato = TypeName(MiCelda.Value)
+    
+    ' Muestra el tipo de dato en una ventana emergente.
+    MsgBox "El tipo de dato en la celda es: " & TipoDato
+End Sub
 
+Sub InsertarDosFilasEnBlanco()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Long
+    
+    ' Establece la hoja de trabajo en la que deseas trabajar (cambia "NombreDeTuHoja" al nombre real de tu hoja).
+    Set ws = ActiveSheet
+    
+    ' Encuentra la última fila con datos en la columna V.
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
 
-
-
+    For i = 2 To LastRow
+         If ws.Cells(i, "A").Value Like "*Firma Empleado*" Then
+                    ws.Rows(i).Copy
+                    ws.Rows(i + 1).Resize(2).Insert Shift:=xlDown
+                    ws.Cells(i + 1, "A").Value = ""
+                    ws.Cells(i + 1, "E").Value = ""
+                    ws.Cells(i + 2, "A").Value = ""
+                    ws.Cells(i + 2, "E").Value = ""
+                    ws.Rows(i + 1).PasteSpecial Paste:=xlPasteFormats
+         End If
+    Next i
+End Sub
