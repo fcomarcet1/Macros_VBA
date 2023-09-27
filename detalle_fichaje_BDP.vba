@@ -195,7 +195,7 @@ Sub FormatDetailTimeSheet()
                     Dim HorasFaltantes As Date
                     HorasFaltantes = HoraLimite - HoraReal
                     CeldaJ.Value = "-" & Format(HorasFaltantes, "hh:mm")
-                    CeldaJ.Font.Color = RGB(255, 0, 0) ' Rojo
+                    ' CeldaJ.Font.Color = RGB(255, 0, 0) ' Rojo
                 End If
                 
                 
@@ -251,37 +251,82 @@ Sub FormatDetailTimeSheet()
         Next Celda
         
         ' Suma Total Horas Reales
-        LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
-        
-        total = 0
-        
-         For i = 1 To LastRow
-            If ws.Cells(i, "A").Value Like "Empleado :*" Then
-               total = 0
-            End If
+            LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
             
-            If (IsDate(ws.Cells(i, "I").Value) Or IsNumeric(ws.Cells(i, "I").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
-               total = ws.Cells(i, "I").Value + total
-            End If
+            total = 0
             
-            If ws.Cells(i, "A").Value Like "Total Semana" Then
-                ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
-                ws.Cells(i, "I").Value = total
+             For i = 1 To LastRow
+                If ws.Cells(i, "A").Value Like "Empleado :*" Then
+                   total = 0
+                End If
                 
-                'Dim ValorCelda As Double
-                'ValorCelda = CDbl(ws.Cells(i, "I").Value)
-                ' MsgBox "El valor total en la celda es: " & total
-
-                'If ValorCelda < MaxHorasSemanales Then
-                    'ws.Cells(i, "I").Font.Color = RGB(255, 0, 0) ' Rojo
-                'End If
+                If (IsDate(ws.Cells(i, "I").Value) Or IsNumeric(ws.Cells(i, "I").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
+                   total = ws.Cells(i, "I").Value + total
+                End If
                 
-                ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                total = 0
-            End If
-        Next i
+                If ws.Cells(i, "A").Value Like "Total Semana" Then
+                    ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
+                    ws.Cells(i, "I").Value = total
+                    
+                    'Dim ValorCelda As Double
+                    'ValorCelda = CDbl(ws.Cells(i, "I").Value)
+                    ' MsgBox "El valor total en la celda es: " & total
+    
+                    'If ValorCelda < MaxHorasSemanales Then
+                        'ws.Cells(i, "I").Font.Color = RGB(255, 0, 0) ' Rojo
+                    'End If
+                    
+                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                    'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                    total = 0
+                End If
+            Next i
         
+        ' Suma Total Horas Extras
+            LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
+                
+            total = 0
+                
+            For i = 1 To LastRow
+                If ws.Cells(i, "A").Value Like "Empleado :*" Then
+                    total = 0
+                End If
+                    
+                If (IsDate(ws.Cells(i, "J").Value) Or IsNumeric(ws.Cells(i, "J").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
+                    total = CDbl(ws.Cells(i, "J").Value) + total
+                End If
+                    
+                If ws.Cells(i, "A").Value Like "Total Semana" Then
+                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                    ws.Cells(i, "J").Value = total
+                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                    total = 0
+                End If
+            Next i
+            
+        ' Total periodo Horas Reales
+            LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
+            
+            total = 0
+                
+            For i = 1 To LastRow
+                If ws.Cells(i, "I").Interior.Color = RGB(238, 229, 227) Then
+                    total = total + ws.Cells(i, "I").Value
+                End If
+                
+                If ws.Cells(i, "A").Value Like "TOTAL PERIODO*" Then
+                    ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
+                    ws.Cells(i, "I").Value = total
+                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                    total = 0
+                End If
+            Next i
+        
+        ' Total periodo Horas extras
+        
+        
+        
+        'Ocultar cols
         
     
         ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
@@ -296,7 +341,6 @@ Sub FormatDetailTimeSheet()
 
     Application.ScreenUpdating = True
 End Sub
-
 
 
 Sub EliminarFilasCondicionalmente()
