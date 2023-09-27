@@ -364,3 +364,58 @@ Sub InsertarDosFilasEnBlanco()
          End If
     Next i
 End Sub
+
+
+Sub ExtraerHora()
+    Dim Hoja As Worksheet
+    Dim Celda As Range
+    
+    ' Establece la hoja de trabajo en la que deseas realizar la operación.
+    Set Hoja = ActiveSheet
+    
+    ' Recorre todas las celdas en la columna A hasta la última fila con datos.
+    For Each Celda In Hoja.Range("I1:I" & Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row)
+        ' Verifica si la celda tiene un valor de fecha válido.
+        If IsDate(Celda.Value) Or IsNumeric(Celda.Value) Then
+            ' Extrae la parte de la hora y asigna el valor a la misma celda.
+            Celda.Value = Format(CDate(Celda.Value), "hh:mm:ss")
+        End If
+        
+    Next Celda
+End Sub
+
+
+Sub SumaHastaCeldaVacia()
+        ' Suma Total Horas Reales
+        Dim total As Double
+        Dim Hoja As Worksheet
+        Dim Celda As Range
+        Dim LastRow As Long
+        Dim ws As Worksheet
+        
+        Set ws = ActiveSheet
+        
+        LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
+        
+        total = 0
+        
+         For i = 1 To LastRow
+            If ws.Cells(i, "A").Value Like "Empleado :*" Then
+               total = 0
+            End If
+            
+            If (IsDate(ws.Cells(i, "J").Value) Or IsNumeric(ws.Cells(i, "J").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
+               total = ws.Cells(i, "J").Value + total
+            End If
+            
+            If ws.Cells(i, "A").Value Like "Total Semana" Then
+                ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                ws.Cells(i, "J").Value = total
+                ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                total = 0
+            End If
+        Next i
+        
+        
+End Sub
