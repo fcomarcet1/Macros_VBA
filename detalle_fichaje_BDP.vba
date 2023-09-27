@@ -271,6 +271,7 @@ Sub FormatDetailTimeSheet()
                 'Dim ValorCelda As Double
                 'ValorCelda = CDbl(ws.Cells(i, "I").Value)
                 ' MsgBox "El valor total en la celda es: " & total
+
                 'If ValorCelda < MaxHorasSemanales Then
                     'ws.Cells(i, "I").Font.Color = RGB(255, 0, 0) ' Rojo
                 'End If
@@ -295,7 +296,6 @@ Sub FormatDetailTimeSheet()
 
     Application.ScreenUpdating = True
 End Sub
-
 
 
 
