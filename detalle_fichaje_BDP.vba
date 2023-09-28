@@ -1,6 +1,3 @@
-
-
-
 Sub FormatDetailTimeSheet()
 
     Dim numCols As Integer 'nº columnas
@@ -228,12 +225,16 @@ Sub FormatDetailTimeSheet()
             For i = 2 To LastRow
                 If ws.Cells(i, "A").value Like "*Firma Empleado*" Then
                     ws.Rows(i).Copy
-                    ws.Rows(i + 1).Resize(2).Insert Shift:=xlDown
+                    ws.Rows(i + 1).Resize(3).Insert Shift:=xlDown
                     ws.Cells(i + 1, "A").value = ""
                     ws.Cells(i + 1, "E").value = ""
                     ws.Cells(i + 2, "A").value = ""
                     ws.Cells(i + 2, "E").value = ""
+                    ws.Cells(i + 3, "A").value = ""
+                    ws.Cells(i + 3, "E").value = ""
                     ws.Rows(i + 1).PasteSpecial Paste:=xlPasteFormats
+                    ws.Rows(i + 2).PasteSpecial Paste:=xlPasteFormats
+                    ws.Rows(i + 3).PasteSpecial Paste:=xlPasteFormats
                  End If
             Next i
         
@@ -345,12 +346,21 @@ Sub FormatDetailTimeSheet()
                 End If
             Next i
         
+        ' Añadir separador usuarios
         
-        'Ocultar cols las columnas G(Tiempo) y H(Horas)
-            Set ws = ActiveSheet
-            ws.Columns("G:H").Hidden = True
+            LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+            
+            For i = 1 To LastRow
+                If ws.Cells(i, 1).value = "Firma Empleado" Then
+                    ' Desplazar 3 celdas abajo
+                    i = i + 3
+                    ws.Range("A" & i & ":J" & i).Interior.Color = RGB(0, 0, 0) ' negro
+                End If
+            Next i
+        
         
         ' Aplicar estilos
+        
     
         ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
         ' ws.Columns("A:A").AutoFit
@@ -360,6 +370,9 @@ Sub FormatDetailTimeSheet()
 
         ' Autoajustar filas
         Hoja.Cells.EntireRow.AutoFit
+            
+        'Ocultar cols las columnas G(Tiempo) y H(Horas)
+        Columns("G:H").Hidden = True
             
 
     Application.ScreenUpdating = True
