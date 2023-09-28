@@ -1,5 +1,6 @@
 
 
+
 Sub FormatDetailTimeSheet()
 
     Dim numCols As Integer 'nº columnas
@@ -84,12 +85,12 @@ Sub FormatDetailTimeSheet()
 
         With ws
             .Columns("D:D").Insert Shift:=xlToRight
-            .Cells(1, "D").Value = "Hora Ent Teorica"
+            .Cells(1, "D").value = "Hora Ent Teorica"
         End With
         
         ' Recorre las filas y separa las fechas y horas
         For iSep = 2 To LastRow
-            Cells(iSep, "D").Value = Format(Cells(iSep, 3), "hh:mm:ss")
+            Cells(iSep, "D").value = Format(Cells(iSep, 3), "hh:mm:ss")
         Next iSep
 
         Dim LastRowH As Long
@@ -98,28 +99,28 @@ Sub FormatDetailTimeSheet()
         
         For i = 2 To LastRowH
             Dim ValorTextoD As Date
-            ValorTextoD = ws.Cells(i, "D").Value
+            ValorTextoD = ws.Cells(i, "D").value
             horaEntTeorica = CDate(ValorTextoD)
             
             If horaEntTeorica >= HoraMañanaLimiteInferior And horaEntTeorica <= HoraMañanaLimiteSuperior Then
                 ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").Value = newDateTimeMañana
+                ws.Cells(i, "D").value = newDateTimeMañana
             End If
             If horaEntTeorica >= HoraTardeLimiteInferior And horaEntTeorica <= HoraTardeLimiteSuperior Then
                 ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").Value = newDateTimeTarde
+                ws.Cells(i, "D").value = newDateTimeTarde
             End If
             If horaEntTeorica >= HoraTarde2LimiteInferior And horaEntTeorica <= HoraTarde2LimiteSuperior Then
                 ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").Value = newDateTimeTarde2
+                ws.Cells(i, "D").value = newDateTimeTarde2
             End If
              If horaEntTeorica >= HoraTarde3LimiteInferior And horaEntTeorica <= HoraTarde3LimiteSuperior Then
                 ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").Value = newDateTimeTarde3
+                ws.Cells(i, "D").value = newDateTimeTarde3
             End If
             If horaEntTeorica >= HoraNocheLimiteInferior And horaEntTeorica <= HoraNocheLimiteSuperior Then
                 ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").Value = newDateTimeNoche
+                ws.Cells(i, "D").value = newDateTimeNoche
             End If
         Next i
 
@@ -132,19 +133,19 @@ Sub FormatDetailTimeSheet()
 
         With ws
             .Columns("I:I").Insert Shift:=xlToRight
-            .Cells(1, "I").Value = "Total horas Reales"
+            .Cells(1, "I").value = "Total horas Reales"
         End With
 
         
         ' Itera a través de las filas con datos
         For i = 2 To LastRow
-            If Not IsEmpty(Cells(i, "D").Value) Then
+            If Not IsEmpty(Cells(i, "D").value) Then
                 ' Calcula la diferencia entre las horas
                 Dim HorasTrabajadas As Double
-                HorasTrabajadas = Cells(i, "F").Value - Cells(i, "D").Value
+                HorasTrabajadas = Cells(i, "F").value - Cells(i, "D").value
                 
                 ' Coloca el resultado en la columna "Total horas reales"
-                Cells(i, "I").Value = HorasTrabajadas
+                Cells(i, "I").value = HorasTrabajadas
                 
                 ' Cambia el formato de la celda a hora para que se vea bien
                 Cells(i, "I").NumberFormat = "hh:mm"
@@ -157,19 +158,19 @@ Sub FormatDetailTimeSheet()
         
         ' Recorre las celdas en la columna I y colorea las celdas vacías de gris si la celda en H tiene datos
         For Each Celda In ws.Range("I1:I" & UltimaFila)
-            If Celda.Offset(0, -1).Value <> "" And IsEmpty(Celda.Value) Then
+            If Celda.Offset(0, -1).value <> "" And IsEmpty(Celda.value) Then
                 Celda.Interior.Color = RGB(238, 229, 227) ' rosa
             End If
         Next Celda
         
-        ' Horas extras
+    ' Horas extras
         ' Set Hoja = ThisWorkbook.Sheets("Hoja1")
         Set Hoja = ActiveSheet
         
         UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
          With ws
             .Columns("J:J").Insert Shift:=xlToRight
-            .Cells(1, "J").Value = "Total horas extras"
+            .Cells(1, "J").value = "Total horas extras"
         End With
         
         Dim HoraLimite As Date
@@ -180,21 +181,21 @@ Sub FormatDetailTimeSheet()
             Set CeldaI = Hoja.Cells(i, "I")
             Set CeldaJ = Hoja.Cells(i, "J")
             
-            If IsNumeric(CeldaI.Value) Then
+            If IsNumeric(CeldaI.value) Then
                 Dim HoraReal As Date
-                HoraReal = TimeSerial(Hour(CeldaI.Value), Minute(CeldaI.Value), Second(CeldaI.Value))
+                HoraReal = TimeSerial(Hour(CeldaI.value), Minute(CeldaI.value), Second(CeldaI.value))
                 
                 If HoraReal > HoraLimite Then
                     Dim HorasExtras As Date
                     HorasExtras = HoraReal - HoraLimite
-                    CeldaJ.Value = Format(HorasExtras, "hh:mm:ss")
+                    CeldaJ.value = Format(HorasExtras, "hh:mm:ss")
                 Else
                     ' CeldaJ.Value = "00:00:00"
                     ' CeldaJ.Interior.Color = RGB(240, 128, 128) ' coral
                     
                     Dim HorasFaltantes As Date
                     HorasFaltantes = HoraLimite - HoraReal
-                    CeldaJ.Value = "-" & Format(HorasFaltantes, "hh:mm")
+                    CeldaJ.value = "-" & Format(HorasFaltantes, "hh:mm")
                     ' CeldaJ.Font.Color = RGB(255, 0, 0) ' Rojo
                 End If
                 
@@ -208,7 +209,7 @@ Sub FormatDetailTimeSheet()
             ' Convierte el valor en la celda a formato de tiempo (si es posible).
             On Error Resume Next
                 Dim valorComoTiempo As Date
-                valorComoTiempo = CDate(ws.Cells(i, 9).Value)
+                valorComoTiempo = CDate(ws.Cells(i, 9).value)
             On Error GoTo 0
             
             ' Verifica si el valor es igual a "00:00:00" en formato de tiempo.
@@ -216,8 +217,8 @@ Sub FormatDetailTimeSheet()
                 ' ws.Cells(i, "J").Value = ""
             ' End If
             
-            If (valorComoTiempo = TimeValue("00:00:00")) And ((ws.Cells(i, 1).Value Like "*Empleado :*") Or (ws.Cells(i, 1).Value Like "*Firma Empleado*")) Then
-                ws.Cells(i, "J").Value = ""
+            If (valorComoTiempo = TimeValue("00:00:00")) And ((ws.Cells(i, 1).value Like "*Empleado :*") Or (ws.Cells(i, 1).value Like "*Firma Empleado*")) Then
+                ws.Cells(i, "J").value = ""
             End If
            Next i
            
@@ -225,13 +226,13 @@ Sub FormatDetailTimeSheet()
             LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
     
             For i = 2 To LastRow
-                If ws.Cells(i, "A").Value Like "*Firma Empleado*" Then
+                If ws.Cells(i, "A").value Like "*Firma Empleado*" Then
                     ws.Rows(i).Copy
                     ws.Rows(i + 1).Resize(2).Insert Shift:=xlDown
-                    ws.Cells(i + 1, "A").Value = ""
-                    ws.Cells(i + 1, "E").Value = ""
-                    ws.Cells(i + 2, "A").Value = ""
-                    ws.Cells(i + 2, "E").Value = ""
+                    ws.Cells(i + 1, "A").value = ""
+                    ws.Cells(i + 1, "E").value = ""
+                    ws.Cells(i + 2, "A").value = ""
+                    ws.Cells(i + 2, "E").value = ""
                     ws.Rows(i + 1).PasteSpecial Paste:=xlPasteFormats
                  End If
             Next i
@@ -241,46 +242,46 @@ Sub FormatDetailTimeSheet()
         
          For Each Celda In Hoja.Range("I1:I" & Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row)
             ' Verifica si la celda tiene un valor de fecha válido.
-            If IsDate(Celda.Value) Or IsNumeric(Celda.Value) Then
+            If IsDate(Celda.value) Or IsNumeric(Celda.value) Then
                 ' Extrae la parte de la hora y asigna el valor a la misma celda.
-                Celda.Value = Format(CDate(Celda.Value), "hh:mm:ss")
+                Celda.value = Format(CDate(Celda.value), "hh:mm:ss")
             End If
-            If Celda.Value = TimeValue("00:00:00") Or Celda.Value = "0,00" Then
-                Celda.Value = ""
+            If Celda.value = TimeValue("00:00:00") Or Celda.value = "0,00" Then
+                Celda.value = ""
             End If
         Next Celda
         
-        ' Suma Total Horas Reales
-            LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
+    ' Suma Total Horas Reales
+        LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
             
-            total = 0
+        total = 0
             
-             For i = 1 To LastRow
-                If ws.Cells(i, "A").Value Like "Empleado :*" Then
-                   total = 0
-                End If
+        For i = 1 To LastRow
+            If ws.Cells(i, "A").value Like "Empleado :*" Then
+                total = 0
+            End If
                 
-                If (IsDate(ws.Cells(i, "I").Value) Or IsNumeric(ws.Cells(i, "I").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
-                   total = ws.Cells(i, "I").Value + total
-                End If
+            If (IsDate(ws.Cells(i, "I").value) Or IsNumeric(ws.Cells(i, "I").value)) And (IsEmpty(ws.Cells(i, "A").value)) Then
+                total = ws.Cells(i, "I").value + total
+            End If
                 
-                If ws.Cells(i, "A").Value Like "Total Semana" Then
-                    ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "I").Value = total
+            If ws.Cells(i, "A").value Like "Total Semana" Then
+                ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
+                ws.Cells(i, "I").value = total
                     
-                    'Dim ValorCelda As Double
-                    'ValorCelda = CDbl(ws.Cells(i, "I").Value)
-                    ' MsgBox "El valor total en la celda es: " & total
+                'Dim ValorCelda As Double
+                'ValorCelda = CDbl(ws.Cells(i, "I").Value)
+                ' MsgBox "El valor total en la celda es: " & total
     
-                    'If ValorCelda < MaxHorasSemanales Then
+                'If ValorCelda < MaxHorasSemanales Then
                         'ws.Cells(i, "I").Font.Color = RGB(255, 0, 0) ' Rojo
-                    'End If
+                'End If
                     
-                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                    'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                    total = 0
-                End If
-            Next i
+                ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                total = 0
+            End If
+        Next i
         
         ' Suma Total Horas Extras
             LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
@@ -288,46 +289,68 @@ Sub FormatDetailTimeSheet()
             total = 0
                 
             For i = 1 To LastRow
-                If ws.Cells(i, "A").Value Like "Empleado :*" Then
+                If ws.Cells(i, "A").value Like "Empleado :*" Then
                     total = 0
                 End If
                     
-                If (IsDate(ws.Cells(i, "J").Value) Or IsNumeric(ws.Cells(i, "J").Value)) And (IsEmpty(ws.Cells(i, "A").Value)) Then
-                    total = CDbl(ws.Cells(i, "J").Value) + total
+                If (IsDate(ws.Cells(i, "J").value) Or IsNumeric(ws.Cells(i, "J").value)) And (IsEmpty(ws.Cells(i, "A").value)) Then
+                    total = CDbl(ws.Cells(i, "J").value) + total
                 End If
                     
-                If ws.Cells(i, "A").Value Like "Total Semana" Then
+                If ws.Cells(i, "A").value Like "Total Semana" Then
                     ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "J").Value = total
+                    ws.Cells(i, "J").value = total
                     ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
                     total = 0
+                End If
+                
+                If ws.Cells(i, "A").value Like "TOTAL PERIODO" Then
+                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                    ' ws.Cells(i, "J").ClearContents
+                    ws.Cells(i, "J").value = TimeValue("00:00:00")
                 End If
             Next i
             
         ' Total periodo Horas Reales
             LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
-            
             total = 0
                 
             For i = 1 To LastRow
                 If ws.Cells(i, "I").Interior.Color = RGB(238, 229, 227) Then
-                    total = total + ws.Cells(i, "I").Value
+                    total = total + ws.Cells(i, "I").value
                 End If
                 
-                If ws.Cells(i, "A").Value Like "TOTAL PERIODO*" Then
+                If ws.Cells(i, "A").value Like "TOTAL PERIODO*" Then
                     ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "I").Value = total
+                    ws.Cells(i, "I").value = total
                     ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
                     total = 0
                 End If
             Next i
         
         ' Total periodo Horas extras
+            LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
+            total = 0
+                
+            For i = 1 To LastRow
+                If ws.Cells(i, "J").Interior.Color = RGB(238, 229, 227) Then
+                    total = total + ws.Cells(i, "J").value
+                End If
+                        
+                If ws.Cells(i, "A").value Like "TOTAL PERIODO*" Then
+                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
+                    ws.Cells(i, "J").value = total
+                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
+                    total = 0
+                End If
+            Next i
         
         
+        'Ocultar cols las columnas G(Tiempo) y H(Horas)
+            Set ws = ActiveSheet
+            ws.Columns("G:H").Hidden = True
         
-        'Ocultar cols
-        
+        ' Aplicar estilos
     
         ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
         ' ws.Columns("A:A").AutoFit
