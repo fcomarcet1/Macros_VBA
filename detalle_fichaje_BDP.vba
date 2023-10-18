@@ -1,381 +1,373 @@
-Sub FormatDetailTimeSheet()
+Sub FormaBDPtInventory()
 
     Dim numCols As Integer 'nº columnas
     Dim iCols As Integer
     Dim col As String
-
+    
     Dim numRows As Long 'nº filas
     Dim iRows As Long
     Dim Fila As String
 
-    Dim ws As Worksheet
-    Dim newDateTimeMañana As String
-    Dim newDateTimeTarde As String
-    Dim newDateTimeNoche As String
-    Dim iSep As Long
-    Dim i As Long
-
-    Dim LastRow As Long
     Dim Hoja As Worksheet
+    Dim ws As Worksheet
+    
+    Dim lastCol As Integer
+    Dim stockCol As Integer
+
     Dim Celda As Range
-    Dim UltimaFila As Long
     
-    Dim UltimaFilaI As Long
-    Dim CeldaI As Range
-
-    Const HoraMañanaLimiteInferior As Date = #9:01:00 AM#
-    Const HoraMañanaLimiteSuperior As Date = #9:59:00 AM#
-    Const HoraTardeLimiteInferior As Date = #4:01:59 PM#
-    Const HoraTardeLimiteSuperior As Date = #4:59:59 PM#
-    Const HoraTarde2LimiteInferior As Date = #6:01:59 PM#
-    Const HoraTarde2LimiteSuperior As Date = #6:59:59 PM#
-    Const HoraTarde3LimiteInferior As Date = #7:01:59 PM#
-    Const HoraTarde3LimiteSuperior As Date = #7:59:59 PM#
-    Const HoraNocheLimiteInferior As Date = #11:01:59 PM#
-    Const HoraNocheLimiteSuperior As Date = #11:59:59 PM#
-    Const MaxHorasExtras As String = "12:00:00"
-    Dim MaxHorasSemanales As Double
-
+    Dim filaAlmacenC As Integer
+    Dim filaCodA As Integer
+    Dim filaCodD As Integer
+    Dim filaFamiliaE As Integer
     
-
-    Application.ScreenUpdating = False
-
-    ' Eliminar encabezado
-    Range("A1:N5").Select
-    Selection.Delete Shift:=xlUp
-
-
-    ' Eliminar columnas vacías
-    numCols = ActiveSheet.UsedRange.Columns.Count
-
-    For iCols = numCols To 1 Step -1
-        If WorksheetFunction.CountA(Cells(1, iCols).EntireColumn) = 0 Then
-            Cells(1, iCols).EntireColumn.Delete
-        End If
-    Next iCols
-
-    ' Eliminar filas vacías
-    numRows = ActiveSheet.UsedRange.Rows.Count
-
-    For iRows = numRows To 1 Step -1
-        Fila = iRows & ":" & iRows
-        If WorksheetFunction.CountA(Range(Fila)) = 0 Then
-            Range("A" & iRows).EntireRow.Delete
-        End If
-    Next iRows
-
-
-    ' Insertar columna "Hora Ent Teorica"
-        newDateTimeMañana = "10:00"
-        newDateTimeTarde = "17:00"
-        newDateTimeTarde2 = "19:00"
-        newDateTimeTarde3 = "20:00"
-        newDateTimeNoche = "00:00"
-        
+    Dim MacroEjecutada As Boolean
+    Dim ejecuciones As Integer
+    
+    'If ejecuciones > 0 Then
+    
         Application.ScreenUpdating = False
-
-        ' Set ws = ThisWorkbook.Sheets("Hoja1")
+        
         Set ws = ActiveSheet
         
-        ' Encontrar la última fila en la columna "Hora ent"
-        LastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
-
-        With ws
-            .Columns("D:D").Insert Shift:=xlToRight
-            .Cells(1, "D").value = "Hora Ent Teorica"
+        ' Eliminar columnas vacías
+        numCols = ActiveSheet.UsedRange.Columns.Count
+    
+        For iCols = numCols To 1 Step -1
+            If WorksheetFunction.CountA(Cells(1, iCols).EntireColumn) = 0 Then
+                Cells(1, iCols).EntireColumn.Delete
+            End If
+        Next iCols
+        
+        ' Eliminar filas vacías
+        numRows = ActiveSheet.UsedRange.Rows.Count
+    
+        For iRows = numRows To 1 Step -1
+            Fila = iRows & ":" & iRows
+            If WorksheetFunction.CountA(Range(Fila)) = 0 Then
+                Range("A" & iRows).EntireRow.Delete
+            End If
+        Next iRows
+        
+         ' Eliminar la fila 5
+        Rows("5:5").Select
+        Selection.Delete Shift:=xlUp
+        
+        ' Elimina las columnas L y M
+        Columns("L:M").Delete
+        
+        ' Añadir Columnas Amacen y Barra con el titulo en la 5º celda
+        lastCol = ActiveSheet.Cells(5, Columns.Count).End(xlToLeft).Column
+        Columns(lastCol + 1).Insert Shift:=xlToRight
+        Columns(lastCol + 2).Insert Shift:=xlToRight
+        
+        ' Colocar el título en la celda 5 de las nuevas columnas
+        Cells(5, lastCol + 1).Value = "Almacen"
+        Cells(5, lastCol + 2).Value = "Barra"
+        
+        
+        ' Poner a 0 los valores de la columna J los cuales tengan cod en la columna
+        lastRow = ws.Cells(ws.Rows.Count, "H").End(xlUp).Row
+            
+        For i = 6 To lastRow
+            If Not IsEmpty(Cells(i, "H").Value) Or Cells(i, "H").Value Like "" Then
+                ws.Cells(i, "J").NumberFormat = "0.00"
+                ws.Cells(i, "L").NumberFormat = "0.00"
+                ws.Cells(i, "M").NumberFormat = "0.00"
+                ws.Cells(i, "J").Value = 0
+            End If
+        Next i
+        
+            
+        For i = 6 To lastRow
+            If Not IsEmpty(Cells(i, "H").Value) Or (ws.Cells(i, "H").Value <> "") Then
+                ' Establece la fórmula en la columna Stock (Columna J) para las filas existentes
+                ws.Cells(i, "J").Formula = "=SUM(L" & i & ":M" & i & ")"
+            End If
+        Next i
+        
+        ' Eliminar los valores 0 de la columna J los cuales no tengan cod en la columna
+        For i = 6 To lastRow
+            If IsEmpty(Cells(i, "H").Value) Then
+                Cells(i, "J").ClearContents
+            End If
+        Next i
+        
+        
+        ws.Columns("L:L").Select
+        
+        Application.CutCopyMode = False
+        
+        With Selection.Font
+            .Name = "Arial"
+            .Size = 8
+            .Strikethrough = False
+            .Superscript = False
+            .Subscript = False
+            .OutlineFont = False
+            .Shadow = False
+            .Underline = xlUnderlineStyleNone
+            .TintAndShade = 0
+            .ThemeFont = xlThemeFontNone
         End With
         
-        ' Recorre las filas y separa las fechas y horas
-        For iSep = 2 To LastRow
-            Cells(iSep, "D").value = Format(Cells(iSep, 3), "hh:mm:ss")
-        Next iSep
-
-        Dim LastRowH As Long
+        ws.Columns("M:M").Select
         
-        LastRowH = ws.Cells(ws.Rows.Count, "H").End(xlUp).Row
-        
-        For i = 2 To LastRowH
-            Dim ValorTextoD As Date
-            ValorTextoD = ws.Cells(i, "D").value
-            horaEntTeorica = CDate(ValorTextoD)
-            
-            If horaEntTeorica >= HoraMañanaLimiteInferior And horaEntTeorica <= HoraMañanaLimiteSuperior Then
-                ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").value = newDateTimeMañana
-            End If
-            If horaEntTeorica >= HoraTardeLimiteInferior And horaEntTeorica <= HoraTardeLimiteSuperior Then
-                ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").value = newDateTimeTarde
-            End If
-            If horaEntTeorica >= HoraTarde2LimiteInferior And horaEntTeorica <= HoraTarde2LimiteSuperior Then
-                ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").value = newDateTimeTarde2
-            End If
-             If horaEntTeorica >= HoraTarde3LimiteInferior And horaEntTeorica <= HoraTarde3LimiteSuperior Then
-                ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").value = newDateTimeTarde3
-            End If
-            If horaEntTeorica >= HoraNocheLimiteInferior And horaEntTeorica <= HoraNocheLimiteSuperior Then
-                ' Si está en ese rango, establecer el valor definido
-                ws.Cells(i, "D").value = newDateTimeNoche
-            End If
-        Next i
-
-    ' Calculo horas trabajadas
-        ' Set ws = ThisWorkbook.Sheets("Hoja1")
-        Set ws = ActiveSheet
-        
-        ' Encontrar la última fila en la columna "Hora ent"
-        LastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
-
-        With ws
-            .Columns("I:I").Insert Shift:=xlToRight
-            .Cells(1, "I").value = "Total horas Reales"
-        End With
-
-        
-        ' Itera a través de las filas con datos
-        For i = 2 To LastRow
-            If Not IsEmpty(Cells(i, "D").value) Then
-                ' Calcula la diferencia entre las horas
-                Dim HorasTrabajadas As Double
-                HorasTrabajadas = Cells(i, "F").value - Cells(i, "D").value
-                
-                ' Coloca el resultado en la columna "Total horas reales"
-                Cells(i, "I").value = HorasTrabajadas
-                
-                ' Cambia el formato de la celda a hora para que se vea bien
-                Cells(i, "I").NumberFormat = "hh:mm"
-            End If
-        Next i
-        
-        
-        ' Encuentra la última fila en la columna H (columna adyacente a la izquierda de la columna I)
-        UltimaFila = ws.Cells(ws.Rows.Count, "H").End(xlUp).Row
-        
-        ' Recorre las celdas en la columna I y colorea las celdas vacías de gris si la celda en H tiene datos
-        For Each Celda In ws.Range("I1:I" & UltimaFila)
-            If Celda.Offset(0, -1).value <> "" And IsEmpty(Celda.value) Then
-                Celda.Interior.Color = RGB(238, 229, 227) ' rosa
-            End If
-        Next Celda
-        
-    ' Horas extras
-        ' Set Hoja = ThisWorkbook.Sheets("Hoja1")
-        Set Hoja = ActiveSheet
-        
-        UltimaFila = Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row
-         With ws
-            .Columns("J:J").Insert Shift:=xlToRight
-            .Cells(1, "J").value = "Total horas extras"
+        With Selection.Font
+            .Name = "Arial"
+            .Size = 8
+            .Strikethrough = False
+            .Superscript = False
+            .Subscript = False
+            .OutlineFont = False
+            .Shadow = False
+            .Underline = xlUnderlineStyleNone
+            .TintAndShade = 0
+            .ThemeFont = xlThemeFontNone
         End With
         
-        Dim HoraLimite As Date
-        HoraLimite = TimeValue("08:00:00") ' Cambia "08:00:00" según tu hora límite
+        ' Mover registros para poder establecer filtro
+        lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
+        ' Inicializar la variable de la fila de Almacén
+        filaAlmacenC = 0
+        filaCodA = 0
+        filaCodD = 0
+        filaFamiliaE = 0
         
         
-        For i = 2 To UltimaFila
-            Set CeldaI = Hoja.Cells(i, "I")
-            Set CeldaJ = Hoja.Cells(i, "J")
-            
-            If IsNumeric(CeldaI.value) Then
-                Dim HoraReal As Date
-                HoraReal = TimeSerial(Hour(CeldaI.value), Minute(CeldaI.value), Second(CeldaI.value))
-                
-                If HoraReal > HoraLimite Then
-                    Dim HorasExtras As Date
-                    HorasExtras = HoraReal - HoraLimite
-                    CeldaJ.value = Format(HorasExtras, "hh:mm:ss")
-                Else
-                    ' CeldaJ.Value = "00:00:00"
-                    ' CeldaJ.Interior.Color = RGB(240, 128, 128) ' coral
-                    
-                    Dim HorasFaltantes As Date
-                    HorasFaltantes = HoraLimite - HoraReal
-                    CeldaJ.value = "-" & Format(HorasFaltantes, "hh:mm")
-                    ' CeldaJ.Font.Color = RGB(255, 0, 0) ' Rojo
-                End If
-                
-                
+        ' Recorrer cada celda en la columna C usando un bucle For
+        For i = 1 To lastRow
+            ' Verificar si la celda contiene "Almacén"
+            If Not IsEmpty(ws.Cells(i, "C").Value) And ws.Cells(i, "C").Value Like "*Almacén*" Then
+                ' Guardar la fila de la celda que contiene "Almacén"
+                filaAlmacenC = i
+                Exit For ' Salir del bucle si se encuentra "Almacén"
             End If
         Next i
         
-        ' Eliminar valores 00:00:00 Col J si la columna A contiene "Empleado :" o "Firma Empleado"
-           For i = 2 To LastRow
-        
-            ' Convierte el valor en la celda a formato de tiempo (si es posible).
-            On Error Resume Next
-                Dim valorComoTiempo As Date
-                valorComoTiempo = CDate(ws.Cells(i, 9).value)
-            On Error GoTo 0
-            
-            ' Verifica si el valor es igual a "00:00:00" en formato de tiempo.
-            ' If (valorComoTiempo = TimeValue("00:00:00")) And (InStr(1, ws.Cells(i, "A").Value, "Empleado :", vbTextCompare) > 0) Then
-                ' ws.Cells(i, "J").Value = ""
-            ' End If
-            
-            If (valorComoTiempo = TimeValue("00:00:00")) And ((ws.Cells(i, 1).value Like "*Empleado :*") Or (ws.Cells(i, 1).value Like "*Firma Empleado*")) Then
-                ws.Cells(i, "J").value = ""
-            End If
-           Next i
-           
-        ' Añadir 2 filas debajo Firma Empleado
-            LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+        ' Verificar si se encontró "Almacén"
+        If filaAlmacenC > 0 Then
+            ' Cortar el contenido de la siguiente celda y pegarlo dos celdas abajo
+            ActiveSheet.Cells(filaAlmacenC + 1, 3).Cut Destination:=ActiveSheet.Cells(filaAlmacenC + 3, 3)
     
-            For i = 2 To LastRow
-                If ws.Cells(i, "A").value Like "*Firma Empleado*" Then
-                    ws.Rows(i).Copy
-                    ws.Rows(i + 1).Resize(3).Insert Shift:=xlDown
-                    ws.Cells(i + 1, "A").value = ""
-                    ws.Cells(i + 1, "E").value = ""
-                    ws.Cells(i + 2, "A").value = ""
-                    ws.Cells(i + 2, "E").value = ""
-                    ws.Cells(i + 3, "A").value = ""
-                    ws.Cells(i + 3, "E").value = ""
-                    ws.Rows(i + 1).PasteSpecial Paste:=xlPasteFormats
-                    ws.Rows(i + 2).PasteSpecial Paste:=xlPasteFormats
-                    ws.Rows(i + 3).PasteSpecial Paste:=xlPasteFormats
-                 End If
-            Next i
-        
-        ' Cambiar formato Total horas Reales Fecha + hh:ss --> hh:ss
-        Set Hoja = ActiveSheet
-        
-         For Each Celda In Hoja.Range("I1:I" & Hoja.Cells(Hoja.Rows.Count, "I").End(xlUp).Row)
-            ' Verifica si la celda tiene un valor de fecha válido.
-            If IsDate(Celda.value) Or IsNumeric(Celda.value) Then
-                ' Extrae la parte de la hora y asigna el valor a la misma celda.
-                Celda.value = Format(CDate(Celda.value), "hh:mm:ss")
-            End If
-            If Celda.value = TimeValue("00:00:00") Or Celda.value = "0,00" Then
-                Celda.value = ""
-            End If
-        Next Celda
-        
-    ' Suma Total Horas Reales
-        LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
-            
-        total = 0
-            
-        For i = 1 To LastRow
-            If ws.Cells(i, "A").value Like "Empleado :*" Then
-                total = 0
-            End If
-                
-            If (IsDate(ws.Cells(i, "I").value) Or IsNumeric(ws.Cells(i, "I").value)) And (IsEmpty(ws.Cells(i, "A").value)) Then
-                total = ws.Cells(i, "I").value + total
-            End If
-                
-            If ws.Cells(i, "A").value Like "Total Semana" Then
-                ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
-                ws.Cells(i, "I").value = total
-                    
-                'Dim ValorCelda As Double
-                'ValorCelda = CDbl(ws.Cells(i, "I").Value)
-                ' MsgBox "El valor total en la celda es: " & total
+            ' Limpiar la celda original
+            ActiveSheet.Cells(filaAlmacenC + 1, 3).Clear
     
-                'If ValorCelda < MaxHorasSemanales Then
-                        'ws.Cells(i, "I").Font.Color = RGB(255, 0, 0) ' Rojo
-                'End If
-                    
-                ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                'ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                total = 0
+        End If
+        
+        
+    
+        ' Recorrer cada celda en la columna A usando un bucle For
+        For i = 1 To lastRow
+            ' Verificar si la celda contiene "Almacén"
+            If Not IsEmpty(ws.Cells(i, "A").Value) And ws.Cells(i, "A").Value Like "*Cód.*" Then
+                ' Guardar la fila de la celda que contiene "Cod."
+                filaCodA = i
+                Exit For ' Salir del bucle si se encuentra "Cod."
             End If
         Next i
         
-        ' Suma Total Horas Extras
-            LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
-                
-            total = 0
-                
-            For i = 1 To LastRow
-                If ws.Cells(i, "A").value Like "Empleado :*" Then
-                    total = 0
-                End If
-                    
-                If (IsDate(ws.Cells(i, "J").value) Or IsNumeric(ws.Cells(i, "J").value)) And (IsEmpty(ws.Cells(i, "A").value)) Then
-                    total = CDbl(ws.Cells(i, "J").value) + total
-                End If
-                    
-                If ws.Cells(i, "A").value Like "Total Semana" Then
-                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "J").value = total
-                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                    total = 0
-                End If
-                
-                If ws.Cells(i, "A").value Like "TOTAL PERIODO" Then
-                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                    ' ws.Cells(i, "J").ClearContents
-                    ws.Cells(i, "J").value = TimeValue("00:00:00")
-                End If
-            Next i
+        ' Verificar si se encontró "Cod."
+        
+        If filaCodA > 0 Then
+            ' Leer el valor de la celda combinada en la columna A y limpiarla
+            Dim valorCod As Variant
+            valorCod = ws.Cells(filaCodA + 1, 1).MergeArea.Value
+            ws.Cells(filaCodA + 1, 1).MergeArea.Clear
             
-        ' Total periodo Horas Reales
-            LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row + 1
-            total = 0
-                
-            For i = 1 To LastRow
-                If ws.Cells(i, "I").Interior.Color = RGB(238, 229, 227) Then
-                    total = total + ws.Cells(i, "I").value
-                End If
-                
-                If ws.Cells(i, "A").value Like "TOTAL PERIODO*" Then
-                    ws.Cells(i, "I").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "I").value = total
-                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                    total = 0
-                End If
-            Next i
+            ' Pegar el valor dos filas más abajo
+            ws.Cells(filaCodA + 3, 1).Value = valorCod
+        End If
         
-        ' Total periodo Horas extras
-            LastRow = ws.Cells(ws.Rows.Count, "J").End(xlUp).Row + 1
-            total = 0
-                
-            For i = 1 To LastRow
-                If ws.Cells(i, "J").Interior.Color = RGB(238, 229, 227) Then
-                    total = total + ws.Cells(i, "J").value
-                End If
-                        
-                If ws.Cells(i, "A").value Like "TOTAL PERIODO*" Then
-                    ws.Cells(i, "J").NumberFormat = "[h]:mm:ss;@"
-                    ws.Cells(i, "J").value = total
-                    ' ws.Cells(i, "J").Value = Format(CDate(ws.Cells(i, "J").Value), "hh:mm:ss")
-                    total = 0
-                End If
-            Next i
         
-        ' Añadir separador usuarios
         
-            LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+        ' Recorrer cada celda en la columna D usando un bucle For
+        For i = 1 To lastRow
+            ' Verificar si la celda contiene "Almacén"
+            If Not IsEmpty(ws.Cells(i, "D").Value) And ws.Cells(i, "D").Value Like "*Cód.*" Then
+                ' Guardar la fila de la celda que contiene "Cod."
+                filaCodD = i
+                Exit For ' Salir del bucle si se encuentra "Cod."
+            End If
+        Next i
+        
+        ' Verificar si se encontró "Cod."
+        
+        If filaCodD > 0 Then
+            ' Leer el valor de la celda combinada en la columna A y limpiarla
+            valorCod = ws.Cells(filaCodD + 2, 4).MergeArea.Value
+            ws.Cells(filaCodD + 2, 4).MergeArea.Clear
             
-            For i = 1 To LastRow
-                If ws.Cells(i, 1).value = "Firma Empleado" Then
-                    ' Desplazar 3 celdas abajo
-                    i = i + 3
-                    ws.Range("A" & i & ":J" & i).Interior.Color = RGB(0, 0, 0) ' negro
-                End If
-            Next i
+            ' Pegar el valor dos filas más abajo
+            ws.Cells(filaCodD + 3, 4).Value = valorCod
+        End If
         
         
-        ' Aplicar estilos
+        ' Recorrer cada celda en la columna F usando un bucle For
+        For i = 1 To lastRow
+            ' Verificar si la celda contiene "Familia"
+            If Not IsEmpty(ws.Cells(i, "E").Value) And ws.Cells(i, "E").Value Like "*Familia*" Then
+                ' Guardar la fila de la celda que contiene "Cod."
+                filaFamiliaE = i
+                Exit For ' Salir del bucle si se encuentra "Cod."
+            End If
+        Next i
         
+        ' Verificar si se encontró "Cod."
+        
+        If filaFamiliaE > 0 Then
+            ' Leer el valor de la celda combinada en la columna E y limpiarla
+            valorCod = ws.Cells(filaFamiliaE + 2, 5).MergeArea.Value
+            ws.Cells(filaFamiliaE + 2, 5).MergeArea.Clear
+            
+            ' Pegar el valor dos filas más abajo
+            ws.Cells(filaFamiliaE + 3, 5).Value = valorCod
+        End If
+        
+        ws.Columns("A:A").Select
+        
+        With Selection.Font
+            .Name = "Arial"
+            .Size = 8
+            .Strikethrough = False
+            .Superscript = False
+            .Subscript = False
+            .OutlineFont = False
+            .Shadow = False
+            .Underline = xlUnderlineStyleNone
+            .TintAndShade = 0
+            .ThemeFont = xlThemeFontNone
+        End With
+        
+        ws.Columns("D:D").Select
+        
+        With Selection.Font
+            .Name = "Arial"
+            .Size = 8
+            .Strikethrough = False
+            .Superscript = False
+            .Subscript = False
+            .OutlineFont = False
+            .Shadow = False
+            .Underline = xlUnderlineStyleNone
+            .TintAndShade = 0
+            .ThemeFont = xlThemeFontNone
+        End With
+        
+           ws.Columns("E:E").Select
+        
+        With Selection.Font
+            .Name = "Arial"
+            .Size = 8
+            .Strikethrough = False
+            .Superscript = False
+            .Subscript = False
+            .OutlineFont = False
+            .Shadow = False
+            .Underline = xlUnderlineStyleNone
+            .TintAndShade = 0
+            .ThemeFont = xlThemeFontNone
+        End With
+        
+        ' Eliminar filas vacías
+        numRows = ActiveSheet.UsedRange.Rows.Count
     
-        ' Opcional: Autoajustar el ancho de la columna J para mostrar correctamente las horas
-        ' ws.Columns("A:A").AutoFit
+        For iRows = numRows To 1 Step -1
+            Fila = iRows & ":" & iRows
+            If WorksheetFunction.CountA(Range(Fila)) = 0 Then
+                Range("A" & iRows).EntireRow.Delete
+            End If
+        Next iRows
+        
+        ' Obtener el número de la última columna en la primera fila
+        lastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+        
+        ' Aplicar estilos a la primera fila
+        With ws.Rows(1).Font
+            .Name = "Arial"
+            .Bold = True ' Hacer el texto en negrita
+            .Size = 12 ' Tamaño de la fuente
+        End With
+        With ws.Rows(2).Font
+            .Name = "Arial"
+            .Bold = True ' Hacer el texto en negrita
+            .Size = 12 ' Tamaño de la fuente
+        End With
+        With ws.Rows(3).Font
+            .Name = "Arial"
+            .Bold = True ' Hacer el texto en negrita
+            .Size = 12 ' Tamaño de la fuente
+        End With
+        With ws.Rows(4).Font
+            .Name = "Arial"
+            .Bold = True ' Hacer el texto en negrita
+            .Size = 12 ' Tamaño de la fuente
+        End With
+        
+        
+        ws.Range("A5:M5").Select
+        Selection.Interior.Color = RGB(255, 255, 153) ' Color de fondo amarillo
+        
+        ' añadir filtro
+        ws.Range("A5:M5").Select
+        Selection.AutoFilter
+        
+        ' Encontrar el rango de celdas con contenido
+        Set rng = ws.UsedRange
+        
+        ' Aplicar bordes a todas las celdas con contenido
+        With rng.Borders
+            .LineStyle = xlContinuous ' Tipo de línea continua
+            .Color = RGB(0, 0, 0) ' Color de borde negro
+            .Weight = xlThin ' Grosor del borde delgado
+        End With
+        
+        ActiveWindow.DisplayGridlines = False
         
         ' Autoajustar columnas
-        Hoja.Cells.EntireColumn.AutoFit
-
+        ws.Cells.EntireColumn.AutoFit
+    
         ' Autoajustar filas
-        Hoja.Cells.EntireRow.AutoFit
-            
-        'Ocultar cols las columnas G(Tiempo) y H(Horas)
-        Columns("G:H").Hidden = True
-            
+        ws.Cells.EntireRow.AutoFit
+        
+        Application.ScreenUpdating = True
+        
+        ' Incrementar el contador de ejecuciones
+        ejecuciones = ejecuciones + 1
+    'End If
+    'Else
+        'MsgBox "La macro ya ha sido ejecutada anteriormente. No puedes volver a ejecutarla", vbExclamation
+    
+    
+End Sub
 
-    Application.ScreenUpdating = True
+Sub ExportarComoPDF()
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim savePath As String
+    
+    ' Establecer la hoja de trabajo
+    Set ws = ActiveSheet ' Reemplaza "Nombre de tu Hoja" con el nombre real de tu hoja
+    
+    ' Ajustar el ancho de las columnas para que quepan los datos
+    ws.Cells.Columns.AutoFit
+    
+    ' Encontrar el rango de celdas con contenido
+    Set rng = ws.UsedRange
+    
+    ' Definir la ruta de guardado del archivo PDF
+    savePath = Application.GetSaveAsFilename(FileFilter:="Archivos PDF (*.pdf), *.pdf", Title:="Guardar PDF como")
+    
+    ' Verificar si se seleccionó un archivo y exportar como PDF
+    If savePath <> "Falso" Then
+        ' Establecer la orientación del PDF como horizontal
+        ws.PageSetup.Orientation = xlLandscape
+        
+        ' Exportar la hoja como PDF
+        ws.ExportAsFixedFormat Type:=xlTypePDF, Filename:=savePath, Quality:=xlQualityStandard
+    Else
+        MsgBox "No se seleccionó una ubicación para guardar el PDF.", vbExclamation
+    End If
 End Sub
 
 
